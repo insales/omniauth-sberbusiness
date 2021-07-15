@@ -2,37 +2,24 @@
 
 require 'omniauth/strategies/oauth2'
 require 'securerandom'
+require 'base64'
 
 module OmniAuth
   module Strategies
-    # Authenticate to Sberbusiness utilizing OAuth 2.0 and retrieve
-    # basic user information.
-    # documentation available here:
-    # https://developer.sberbank.ru/doc/v1/sberbusiness-id/info
-    #
-    # provider :sberbusiness,
-    # client_id: '11111111-1111-1111-1111-1111111111111111',
-    # client_secret: 'YOURSECRET',
-    # response_type: 'code',
-    # client_type: 'PRIVATE',
-    # client_options: { ssl: { client_key: client_key, client_cert: client_cert } },
-    # scope: 'openid name email mobile',
-    # callback_path: '/callback',
-    # grant_type: 'client_credentials'
-    #
     class Sberbusiness < OmniAuth::Strategies::OAuth2
       class NoRawData < StandardError; end
 
       API_VERSION = '1.0'
 
-      DEFAULT_SCOPE = 'openid name'
+      DEFAULT_SCOPE = 'openid inn email'
 
       option :name, 'sberbusiness'
 
       option :client_options,
-             site: 'https://sbi.sberbank.ru:9443',
-             token_url: 'https://sbi.sberbank.ru:9443/ic/sso/api/v1/oauth/token',
-             authorize_url: 'https://sbi.sberbank.ru:9443/ic/sso/api/v1/oauth/authorize'
+             site: 'https://edupirfintech.sberbank.ru:9443', # 'https://edupir.testsbi.sberbank.ru:9443', # 'https://sbi.sberbank.ru:9443',
+             token_url: 'https://edupirfintech.sberbank.ru:9443/ic/sso/api/v2/oauth/token', # https://edupirfintech.sberbank.ru:9443 https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/token
+             authorize_url: 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
+             # 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize' # 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
 
       option :authorize_options, %i[scope response_type client_type client_id state nonce]
 
@@ -44,10 +31,17 @@ module OmniAuth
       info do
         {
           name: raw_info['name'],
+          orgFullName: raw_info['orgFullName'],
+          OrgName: raw_info['OrgName'],
+          orgKpp: raw_info['orgKpp'],
+          orgOgrn: raw_info['orgOgrn'],
+          orgActualAddress: raw_info['orgActualAddress'],
+          orgJuridicalAddress: raw_info['orgJuridicalAddress'],
           phone_number: raw_info['phone_number'],
           email: raw_info['email'],
           accounts: raw_info['accounts'],
           id: raw_info['sub'],
+          inn: raw_info['inn'],
           client_host: raw_info['state'],
           provider: 'sberbusiness'
         }
@@ -64,11 +58,10 @@ module OmniAuth
         access_token.options[:mode] = :header
         @raw_info ||= begin
           state = request.params['state']
-          result = access_token.get('/ic/sso/api/v1/oauth/user-info', headers: info_headers).parsed
-          unless result['aud'] == options.client_id
-            raise ArgumentError, "aud in Sber response not equal clien_id. aud = #{result['aud']}"
-          end
-
+          result = access_token.get('/ic/sso/api/v2/oauth/user-info', headers: info_headers).body
+          # декодируем ответ:
+          decoded_data = result.split('.').map { |code| JSON.parse(Base64.decode64(code)) rescue {}}
+          result = decoded_data.reduce(:merge)
           result['state'] = state
           result
         end
@@ -88,12 +81,6 @@ module OmniAuth
           params[:state] = state
           session['omniauth.state'] = state
           params[:nonce] = SecureRandom.hex(16)
-        end
-      end
-
-      def token_params
-        super.tap do |params|
-          params[:scope] ||= DEFAULT_SCOPE
         end
       end
 
@@ -130,12 +117,6 @@ module OmniAuth
         options[:https] || 0
       end
 
-      # https://developer.sberbank.ru/doc/v1/sberbank-id/accessidtokens
-      def build_access_token
-        options.token_params.update(headers: access_token_headers)
-        super
-      end
-
       def image_url
         case options[:image_size]
         when 'mini'
@@ -165,20 +146,8 @@ module OmniAuth
         fail!(:no_raw_data, e)
       end
 
-      def access_token_headers
-        OmniAuth.logger.send(:debug, "YOUR RQUID #{rquid}")
-        {
-          'rquid' => rquid,
-          'x-ibm-client-id' => options.client_id,
-          'accept' => 'application/json'
-        }
-      end
-
       def info_headers
         {
-          'x-introspect-rquid' => rquid,
-          'x-ibm-client-id' => options.client_id,
-          'accept' => 'application/json',
           'Authorization' => "Bearer #{access_token.token}"
         }
       end
