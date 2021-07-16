@@ -117,23 +117,6 @@ module OmniAuth
         options[:https] || 0
       end
 
-      def image_url
-        case options[:image_size]
-        when 'mini'
-          raw_info['photo_50']
-        when 'bigger'
-          raw_info['photo_100']
-        when 'bigger_x2'
-          raw_info['photo_200']
-        when 'original'
-          raw_info['photo_200_orig']
-        when 'original_x2'
-          raw_info['photo_400_orig']
-        else
-          raw_info['photo_50']
-        end
-      end
-
       def location
         country = raw_info.fetch('country', {})['title']
         city = raw_info.fetch('city', {})['title']
