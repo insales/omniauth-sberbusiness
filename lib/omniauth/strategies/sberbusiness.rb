@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# ecoding: utf-8
 
 require 'omniauth/strategies/oauth2'
 require 'securerandom'
@@ -60,11 +61,15 @@ module OmniAuth
           state = request.params['state']
           result = access_token.get('/ic/sso/api/v2/oauth/user-info', headers: info_headers).body
           # декодируем ответ:
-          decoded_data = result.split('.').map { |code| JSON.parse(Base64.decode64(code)) rescue {}}
+          decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
           result = decoded_data.reduce(:merge)
           result['state'] = state
           result
         end
+      end
+
+      def decrypt(msg)
+        JSON.parse(Base64.urlsafe_decode64(msg).force_encoding(Encoding::UTF_8))
       end
 
       # https://developer.sberbank.ru/doc/v1/sberbank-id/authcodereq
