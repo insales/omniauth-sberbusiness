@@ -1,5 +1,4 @@
 # frozen_string_literal: true
-# ecoding: utf-8
 
 require 'omniauth/strategies/oauth2'
 require 'securerandom'
