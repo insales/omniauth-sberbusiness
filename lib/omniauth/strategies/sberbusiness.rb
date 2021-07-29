@@ -16,9 +16,9 @@ module OmniAuth
       option :name, 'sberbusiness'
 
       option :client_options,
-             site: 'https://edupirfintech.sberbank.ru:9443', # 'https://edupir.testsbi.sberbank.ru:9443', # 'https://sbi.sberbank.ru:9443',
-             token_url: 'https://edupirfintech.sberbank.ru:9443/ic/sso/api/v2/oauth/token', # https://edupirfintech.sberbank.ru:9443 https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/token
-             authorize_url: 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
+             site: 'https://sbi.sberbank.ru:9443', # 'https://edupir.testsbi.sberbank.ru:9443', # 'https://sbi.sberbank.ru:9443',
+             token_url: 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/token', # https://edupirfintech.sberbank.ru:9443 https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/token
+             authorize_url: 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
              # 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize' # 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
 
       option :authorize_options, %i[scope response_type client_type client_id state nonce]
