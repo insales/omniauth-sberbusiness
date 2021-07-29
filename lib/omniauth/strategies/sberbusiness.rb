@@ -17,9 +17,9 @@ module OmniAuth
 
       option :client_options,
              site: 'https://edupirfintech.sberbank.ru:9443', # 'https://edupir.testsbi.sberbank.ru:9443', # 'https://sbi.sberbank.ru:9443',
-             token_url: 'https://edupirfintech.sberbank.ru:9443/ic/sso/api/v2/oauth/token', # https://edupirfintech.sberbank.ru:9443 https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/token
-             authorize_url: 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
-             # 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize' # 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
+             token_url: 'https://edupirfintech.sberbank.ru:9443/ic/sso/api/v1/oauth/token', # https://edupirfintech.sberbank.ru:9443 https://sbi.sberbank.ru:9443/ic/sso/api/v1/oauth/token
+             authorize_url: 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v1/oauth/authorize'
+             # 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v1/oauth/authorize' # 'https://sbi.sberbank.ru:9443/ic/sso/api/v1/oauth/authorize'
 
       option :authorize_options, %i[scope response_type client_type client_id state nonce]
 
@@ -49,7 +49,8 @@ module OmniAuth
 
       extra do
         {
-          'raw_info' => raw_info
+          'raw_info' => raw_info,
+          'token' => access_token.token
         }
       end
 
@@ -58,7 +59,7 @@ module OmniAuth
         access_token.options[:mode] = :header
         @raw_info ||= begin
           state = request.params['state']
-          result = access_token.get('/ic/sso/api/v2/oauth/user-info', headers: info_headers).body
+          result = access_token.get('/ic/sso/api/v1/oauth/user-info', headers: info_headers).body
           # декодируем ответ:
           decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
           result = decoded_data.reduce(:merge)
