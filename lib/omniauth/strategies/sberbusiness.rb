@@ -6,6 +6,7 @@ require 'base64'
 
 module OmniAuth
   module Strategies
+    # https://developer.sberbank.ru/doc/v3/sbbol
     class Sberbusiness < OmniAuth::Strategies::OAuth2
       class NoRawData < StandardError; end
 
@@ -15,11 +16,14 @@ module OmniAuth
 
       option :name, 'sberbusiness'
 
+      option :test, false
+
       option :client_options,
-             site: 'https://fintech.sberbank.ru:9443', # 'https://edupir.testsbi.sberbank.ru:9443', # 'https://sbi.sberbank.ru:9443',
-             token_url: 'https://fintech.sberbank.ru:9443/ic/sso/api/v2/oauth/token', # https://edupirfintech.sberbank.ru:9443 https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/token
-             authorize_url: 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
-             # 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize' # 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
+             site: 'https://fintech.sberbank.ru:9443',
+             token_url: 'https://fintech.sberbank.ru:9443/ic/sso/api/v2/oauth/token',
+             authorize_url: 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize',
+             user_info_path: '/ic/sso/api/v2/oauth/user-info',
+             client_info_path: '/api/v1/client-info'
 
       option :authorize_options, %i[scope response_type client_type client_id state nonce]
 
@@ -42,28 +46,33 @@ module OmniAuth
           accounts: raw_info['accounts'],
           id: raw_info['sub'],
           inn: raw_info['inn'],
-          client_host: raw_info['state'],
-          provider: 'sberbusiness'
+          provider: options.name
         }
       end
 
       extra do
-        {
-          'raw_info' => raw_info
-        }
+        if options.test
+          {
+            'raw_info' => raw_info,
+            'credentials' => credentials
+          }
+        else
+          { 'raw_info' => raw_info }
+        end
       end
 
-      # https://developer.sberbank.ru/doc/v1/sberbank-id/datareq
       def raw_info
         access_token.options[:mode] = :header
         @raw_info ||= begin
-          state = request.params['state']
-          result = access_token.get('/ic/sso/api/v2/oauth/user-info', headers: info_headers).body
+          result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
           # декодируем ответ:
           decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
           result = decoded_data.reduce(:merge)
-          result['state'] = state
-          result
+          # здесь нужен скоп специальный, а на тесте мы его задать не можем
+          return result unless options.test
+
+          org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
+          result.merge({ client_info: org_info.force_encoding('UTF-8') })
         end
       end
 
@@ -71,7 +80,6 @@ module OmniAuth
         JSON.parse(Base64.urlsafe_decode64(msg).force_encoding(Encoding::UTF_8))
       end
 
-      # https://developer.sberbank.ru/doc/v1/sberbank-id/authcodereq
       def authorize_params
         super.tap do |params|
           %w[state scope response_type client_type client_id nonce].each do |v|
@@ -80,10 +88,6 @@ module OmniAuth
             params[v.to_sym] = request.params[v]
           end
           params[:scope] ||= DEFAULT_SCOPE
-          # if you want redirect to other host and save old host
-          state = session['omniauth.origin'] || env['HTTP_REFERER']
-          params[:state] = state
-          session['omniauth.state'] = state
           params[:nonce] = SecureRandom.hex(16)
         end
       end
@@ -104,7 +108,6 @@ module OmniAuth
       end
 
       def info_options
-        # https://developer.sberbank.ru/doc/v1/sberbank-id/dataanswerparametrs
         fields = %w[
           sub family_name given_name middle_name birthdate email phone_number
           address_reg identification inn snils gender

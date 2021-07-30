@@ -3,3 +3,4 @@
 coverage
 Gemfile.lock
 .idea
+*.gem
