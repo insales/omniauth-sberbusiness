@@ -3,6 +3,7 @@
 require 'omniauth/strategies/oauth2'
 require 'securerandom'
 require 'base64'
+require 'pry'
 
 module OmniAuth
   module Strategies
@@ -30,6 +31,11 @@ module OmniAuth
       option :redirect_url, nil
 
       uid { raw_info['sub'].to_s }
+
+      def client
+        change_links if options.test
+        super
+      end
 
       # https://github.com/intridea/omniauth/wiki/Auth-Hash-Schema
       info do
@@ -72,7 +78,7 @@ module OmniAuth
           return result unless options.test
 
           org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
-          result.merge({ client_info: org_info.force_encoding('UTF-8') })
+          result.merge(client_info: org_info.force_encoding('UTF-8'))
         end
       end
 
@@ -81,6 +87,9 @@ module OmniAuth
       end
 
       def authorize_params
+        # add links in options
+        change_links if options.test
+
         super.tap do |params|
           %w[state scope response_type client_type client_id nonce].each do |v|
             next unless request.params[v]
@@ -101,6 +110,19 @@ module OmniAuth
           https: https_option,
           v: API_VERSION
         }
+      end
+
+      def change_links
+        options.client_options[:site] = options.client_options[:test_site] ||
+                                        'https://edupirfintech.sberbank.ru:9443'
+        options.client_options[:token_url] = options.client_options[:test_token_url] ||
+                                             'https://edupirfintech.sberbank.ru:9443/ic/sso/api/v1/oauth/token'
+        options.client_options[:authorize_url] = options.client_options[:test_authorize_url] ||
+                                                 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v1/oauth/authorize'
+        options.client_options[:user_info_path] = options.client_options[:test_user_info_path] ||
+                                                  '/ic/sso/api/v1/oauth/user-info'
+        options.client_options[:client_info_path] = options.client_options[:test_client_info_path] ||
+                                                    '/fintech/api/v1/client-info'
       end
 
       def callback_url
