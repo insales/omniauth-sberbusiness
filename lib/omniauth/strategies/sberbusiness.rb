@@ -119,7 +119,7 @@ module OmniAuth
         options.client_options[:token_url] = options.client_options[:test_token_url] ||
                                              'https://edupirfintech.sberbank.ru:9443/ic/sso/api/v1/oauth/token'
         options.client_options[:authorize_url] = options.client_options[:test_authorize_url] ||
-                                                 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v1/oauth/authorize'
+                                                 'https://edupir.testsbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize'
         options.client_options[:user_info_path] = options.client_options[:test_user_info_path] ||
                                                   '/ic/sso/api/v1/oauth/user-info'
         options.client_options[:client_info_path] = options.client_options[:test_client_info_path] ||
