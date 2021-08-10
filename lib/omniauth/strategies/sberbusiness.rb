@@ -52,6 +52,7 @@ module OmniAuth
           accounts: raw_info['accounts'],
           id: raw_info['sub'],
           inn: raw_info['inn'],
+          bank: raw_info['terBank'],
           provider: options.name
         }
       end
