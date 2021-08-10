@@ -53,6 +53,8 @@ module OmniAuth
           id: raw_info['sub'],
           inn: raw_info['inn'],
           bank: raw_info['terBank'],
+          org_id: raw_info['orgId'],
+          org_id_hash: raw_info['HashOrgId'],
           provider: options.name
         }
       end
