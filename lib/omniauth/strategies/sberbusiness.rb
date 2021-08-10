@@ -41,12 +41,12 @@ module OmniAuth
       info do
         {
           name: raw_info['name'],
-          orgFullName: raw_info['orgFullName'],
-          OrgName: raw_info['OrgName'],
-          orgKpp: raw_info['orgKpp'],
-          orgOgrn: raw_info['orgOgrn'],
-          orgActualAddress: raw_info['orgActualAddress'],
-          orgJuridicalAddress: raw_info['orgJuridicalAddress'],
+          org_full_name: raw_info['orgFullName'],
+          org_name: raw_info['OrgName'],
+          org_kpp: raw_info['orgKpp'],
+          org_ogrn: raw_info['orgOgrn'],
+          org_actual_address: raw_info['orgActualAddress'],
+          org_juridical_address: raw_info['orgJuridicalAddress'],
           phone_number: raw_info['phone_number'],
           email: raw_info['email'],
           accounts: raw_info['accounts'],
