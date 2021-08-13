@@ -57,14 +57,10 @@ module OmniAuth
       end
 
       extra do
-        if options.test
-          {
-            'raw_info' => raw_info,
-            'credentials' => credentials
-          }
-        else
-          { 'raw_info' => raw_info }
-        end
+        {
+          'raw_info' => raw_info,
+          'credentials' => credentials
+        }
       end
 
       def raw_info
@@ -73,10 +69,10 @@ module OmniAuth
           result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
           # декодируем ответ:
           decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
-          result = decoded_data.reduce(:merge)
-          # здесь нужен скоп специальный, а на тесте мы его задать не можем
-          return result unless options.test
+          decoded_data.reduce(:merge)
+          return result if options.scope.include? 'GET_CLIENT_ACCOUNTS'
 
+          # здесь нужен скоп специальный, а на тесте мы его задать не можем
           org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
           result.merge(client_info: org_info.force_encoding('UTF-8'))
         end
