@@ -73,7 +73,7 @@ module OmniAuth
           # декодируем ответ:
           decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
           decoded_data.reduce(:merge)
-          return result if options.scope.include? 'GET_CLIENT_ACCOUNTS'
+          return result unless options.scope.include? 'GET_CLIENT_ACCOUNTS'
 
           # здесь нужен скоп специальный, а на тесте мы его задать не можем
           org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
