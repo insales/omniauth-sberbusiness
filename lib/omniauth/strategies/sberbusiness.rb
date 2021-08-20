@@ -34,7 +34,11 @@ module OmniAuth
 
       def client
         change_links if options.test
-        super
+        client = super
+        logger = ActiveSupport::TaggedLogging.new(Rails.logger)
+        logger.push_tags('Sberbusiness Auth')
+        client.connection.response :logger, logger, { bodies: true, log_level: :debug }
+        client
       end
 
       # https://github.com/intridea/omniauth/wiki/Auth-Hash-Schema
@@ -73,11 +77,13 @@ module OmniAuth
           # декодируем ответ:
           decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
           decoded_data.reduce(:merge)
-          return result unless options.scope.include? 'GET_CLIENT_ACCOUNTS'
-
-          # здесь нужен скоп специальный, а на тесте мы его задать не можем
-          org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
-          result.merge(client_info: org_info.force_encoding('UTF-8'))
+          if options.scope.include? 'GET_CLIENT_ACCOUNTS'
+            # если нужно узнать доп информацию - узнаём
+            org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
+            result.merge(client_info: org_info.force_encoding('UTF-8'))
+          else
+            result
+          end
         end
       end
 
@@ -86,13 +92,9 @@ module OmniAuth
       end
 
       def authorize_params
-        # add links in options
-        change_links if options.test
-
         super.tap do |params|
           %w[state scope response_type client_type client_id nonce].each do |v|
             next unless request.params[v]
-
             params[v.to_sym] = request.params[v]
           end
           params[:scope] ||= DEFAULT_SCOPE
