@@ -59,6 +59,7 @@ module OmniAuth
           bank: raw_info['terBank'],
           org_id: raw_info['orgId'],
           org_id_hash: raw_info['HashOrgId'],
+          org_business_segment_name: raw_info['orgBusinessSegmentName'],
           provider: options.name
         }
       end
