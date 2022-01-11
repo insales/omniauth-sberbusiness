@@ -78,6 +78,8 @@ module OmniAuth
           # декодируем ответ:
           decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
           decoded_data.reduce(:merge)
+          Rails.logger.info("omniauth-sberbusiness_result:#{result}")
+          Rails.logger.info("omniauth-sberbusiness_decoded_data:#{decoded_data}")
           if options.scope.include? 'GET_CLIENT_ACCOUNTS'
             # если нужно узнать доп информацию - узнаём
             org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
