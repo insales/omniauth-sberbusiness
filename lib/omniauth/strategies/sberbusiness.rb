@@ -67,23 +67,26 @@ module OmniAuth
       extra do
         {
           'raw_info' => raw_info,
-          'credentials' => credentials
+          'credentials' => credentials,
+          'client_info' => client_info
         }
+      end
+
+      def client_info
+        access_token.options[:mode] = :header
+        client_info_path = options.client_options['client_info_path']
+        JSON.parse(access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8'))
       end
 
       def raw_info
         access_token.options[:mode] = :header
+        #  SBBOL тестовый стенд возвращает закодированную строку
+        #  SBBOL промышленный стенд возвращает Json
         @raw_info ||= begin
           result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
-          # декодируем ответ:
-          decoded_data = result.split('.').map { |code| decrypt(code) rescue {}}
-          decoded_data.reduce(:merge)
-          Rails.logger.info("omniauth-sberbusiness_result:#{result.inspect}")
-          Rails.logger.info("omniauth-sberbusiness_decoded_data:#{decoded_data.inspect}")
-          if options.scope.include? 'GET_CLIENT_ACCOUNTS'
-            # если нужно узнать доп информацию - узнаём
-            org_info = access_token.get(options.client_options['client_info_path'], headers: info_headers).body
-            result.merge(client_info: org_info.force_encoding('UTF-8'))
+          if access_token.client.options[:authorize_url].include? 'edupir.testsbi.sberbank.ru:9443'
+            decoded_data = result.split('.').map { |code| decrypt(code) rescue {} }
+            decoded_data.reduce(:merge)
           else
             result
           end
