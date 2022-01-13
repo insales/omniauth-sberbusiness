@@ -75,7 +75,7 @@ module OmniAuth
       def client_info
         access_token.options[:mode] = :header
         client_info_path = options.client_options['client_info_path']
-        JSON.parse(access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8'))
+        access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8')
       end
 
       def raw_info
