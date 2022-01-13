@@ -84,6 +84,7 @@ module OmniAuth
         #  SBBOL промышленный стенд возвращает Json
         @raw_info ||= begin
           result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
+          #TODO Переделать проверку
           if access_token.client.options[:authorize_url].include? 'edupir.testsbi.sberbank.ru:9443'
             decoded_data = result.split('.').map { |code| decrypt(code) rescue {} }
             decoded_data.reduce(:merge)
