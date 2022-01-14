@@ -61,7 +61,6 @@ module OmniAuth
           org_id_hash: raw_info['HashOrgId'],
           org_business_segment_name: client_info['orgBusinessSegmentName'],
           provider: options.name
-
         }
       end
 
