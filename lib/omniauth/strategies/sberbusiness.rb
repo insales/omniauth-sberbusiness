@@ -59,8 +59,9 @@ module OmniAuth
           bank: raw_info['terBank'],
           org_id: raw_info['orgId'],
           org_id_hash: raw_info['HashOrgId'],
-          org_business_segment_name: raw_info['orgBusinessSegmentName'],
+          org_business_segment_name: client_info['orgBusinessSegmentName'],
           provider: options.name
+
         }
       end
 
@@ -75,7 +76,7 @@ module OmniAuth
       def client_info
         access_token.options[:mode] = :header
         client_info_path = options.client_options['client_info_path']
-        access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8')
+        Oj.load(access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8'))
       end
 
       def raw_info
@@ -95,7 +96,7 @@ module OmniAuth
       end
 
       def decrypt(msg)
-        JSON.parse(Base64.urlsafe_decode64(msg).force_encoding(Encoding::UTF_8))
+        Oj.load(Base64.urlsafe_decode64(msg).force_encoding(Encoding::UTF_8))
       end
 
       def authorize_params
