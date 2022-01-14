@@ -76,7 +76,7 @@ module OmniAuth
       def client_info
         access_token.options[:mode] = :header
         client_info_path = options.client_options['client_info_path']
-        Oj.load(access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8'))
+        JSON.parse(access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8'))
       end
 
       def raw_info
@@ -96,7 +96,7 @@ module OmniAuth
       end
 
       def decrypt(msg)
-        Oj.load(Base64.urlsafe_decode64(msg).force_encoding(Encoding::UTF_8))
+        JSON.parse(Base64.urlsafe_decode64(msg).force_encoding(Encoding::UTF_8))
       end
 
       def authorize_params
