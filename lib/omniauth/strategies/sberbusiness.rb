@@ -82,11 +82,8 @@ module OmniAuth
 
       def raw_info
         access_token.options[:mode] = :header
-        #  SBBOL тестовый стенд возвращает закодированную строку
-        #  SBBOL промышленный стенд возвращает Json
         @raw_info ||= begin
           result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
-          #TODO Переделать проверку
           if options.test
             decoded_data = result.split('.').map { |code| decrypt(code) rescue {} }
             decoded_data.reduce(:merge)
