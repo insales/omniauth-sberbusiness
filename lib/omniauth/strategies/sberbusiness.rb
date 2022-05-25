@@ -24,7 +24,7 @@ module OmniAuth
              token_url: 'https://fintech.sberbank.ru:9443/ic/sso/api/v2/oauth/token',
              authorize_url: 'https://sbi.sberbank.ru:9443/ic/sso/api/v2/oauth/authorize',
              user_info_path: '/ic/sso/api/v2/oauth/user-info',
-             client_info_path: '/api/v1/client-info'
+             client_info_path: '/fintech/api/v1/client-info'
 
       option :authorize_options, %i[scope response_type client_type client_id state nonce]
 
@@ -67,7 +67,8 @@ module OmniAuth
       extra do
         {
           'raw_info' => raw_info,
-          'credentials' => credentials
+          'credentials' => credentials,
+          'client_info' => client_info
         }
       end
 
