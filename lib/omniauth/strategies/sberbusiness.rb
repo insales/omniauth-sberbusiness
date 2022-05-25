@@ -84,12 +84,8 @@ module OmniAuth
         access_token.options[:mode] = :header
         @raw_info ||= begin
           result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
-          if options.test
-            decoded_data = result.split('.').map { |code| decrypt(code) rescue {} }
-            decoded_data.reduce(:merge)
-          else
-            result
-          end
+          decoded_data = result.split('.').map { |code| decrypt(code) }
+          decoded_data.reduce(:merge)
         end
       end
 
