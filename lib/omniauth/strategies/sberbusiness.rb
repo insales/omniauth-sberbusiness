@@ -34,6 +34,7 @@ module OmniAuth
 
       def client
         change_links if options.test
+        change_auth_link_when_token if request.params['userType'] == 'Token'
         client = super
         logger = ActiveSupport::TaggedLogging.new(Rails.logger)
         logger.push_tags('Sberbusiness Auth')
@@ -59,7 +60,6 @@ module OmniAuth
           bank: raw_info['terBank'],
           org_id: raw_info['orgId'],
           org_id_hash: raw_info['HashOrgId'],
-          org_business_segment_name: client_info['orgBusinessSegmentName'],
           provider: options.name
         }
       end
@@ -73,6 +73,8 @@ module OmniAuth
       end
 
       def client_info
+        return unless options.scope.include? 'GET_CLIENT_ACCOUNTS'
+
         access_token.options[:mode] = :header
         client_info_path = options.client_options['client_info_path']
         JSON.parse(access_token.get(client_info_path, headers: info_headers).body.force_encoding('UTF-8'))
@@ -80,12 +82,9 @@ module OmniAuth
 
       def raw_info
         access_token.options[:mode] = :header
-        #  SBBOL тестовый стенд возвращает закодированную строку
-        #  SBBOL промышленный стенд возвращает Json
         @raw_info ||= begin
           result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
-          #TODO Переделать проверку
-          if access_token.client.options[:authorize_url].include? 'edupir.testsbi.sberbank.ru:9443'
+          if options.test
             decoded_data = result.split('.').map { |code| decrypt(code) rescue {} }
             decoded_data.reduce(:merge)
           else
@@ -174,6 +173,10 @@ module OmniAuth
 
       def rquid
         @rquid ||= SecureRandom.hex(16)
+      end
+
+      def change_auth_link_when_token
+        options.client_options[:authorize_url] = "http://localhost:#{request.params['callbackPort']}/ic/sso/api/v2/oauth/authorize"
       end
     end
   end
