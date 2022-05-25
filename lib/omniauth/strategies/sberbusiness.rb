@@ -67,8 +67,7 @@ module OmniAuth
       extra do
         {
           'raw_info' => raw_info,
-          'credentials' => credentials,
-          'client_info' => client_info
+          'credentials' => credentials
         }
       end
 
