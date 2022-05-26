@@ -95,7 +95,7 @@ module OmniAuth
 
       def sbbol_headers
         @sbbol_headers ||= begin
-          return unless raw_info[0]
+          return unless raw_info[0].blanck?
 
           decrypt(raw_info[0])
         end
@@ -103,7 +103,7 @@ module OmniAuth
 
       def user_info
         @user_info ||= begin
-          return unless raw_info[1]
+          return unless raw_info[1].blanck?
 
           decrypt(raw_info[1])
         end
@@ -111,7 +111,7 @@ module OmniAuth
 
       def sbbol_signature
         @sbbol_signature ||= begin
-          return unless raw_info[2]
+          return unless raw_info[2].blanck?
 
           raw_info[2]
         end
