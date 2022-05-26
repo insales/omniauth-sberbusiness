@@ -177,12 +177,6 @@ module OmniAuth
         options[:https] || 0
       end
 
-      def location
-        country = user_info.fetch('country', {})['title']
-        city = user_info.fetch('city', {})['title']
-        @location ||= [country, city].compact.join(', ')
-      end
-
       def callback_phase
         super
       rescue NoRawData => e
