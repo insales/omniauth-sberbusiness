@@ -30,7 +30,7 @@ module OmniAuth
 
       option :redirect_url, nil
 
-      uid { raw_info['sub'].to_s }
+      uid { user_info['sub'].to_s }
 
       def client
         change_links if options.test
@@ -45,30 +45,32 @@ module OmniAuth
       # https://github.com/intridea/omniauth/wiki/Auth-Hash-Schema
       info do
         {
-          name: raw_info['name'],
-          org_full_name: raw_info['orgFullName'],
-          org_name: raw_info['OrgName'],
-          org_kpp: raw_info['orgKpp'],
-          org_ogrn: raw_info['orgOgrn'],
-          org_actual_address: raw_info['orgActualAddress'],
-          org_juridical_address: raw_info['orgJuridicalAddress'],
-          phone_number: raw_info['phone_number'],
-          email: raw_info['email'],
-          accounts: raw_info['accounts'],
-          id: raw_info['sub'],
-          inn: raw_info['inn'],
-          bank: raw_info['terBank'],
-          org_id: raw_info['orgId'],
-          org_id_hash: raw_info['HashOrgId'],
+          name: user_info['name'],
+          org_full_name: user_info['orgFullName'],
+          org_name: user_info['OrgName'],
+          org_kpp: user_info['orgKpp'],
+          org_ogrn: user_info['orgOgrn'],
+          org_actual_address: user_info['orgActualAddress'],
+          org_juridical_address: user_info['orgJuridicalAddress'],
+          phone_number: user_info['phone_number'],
+          email: user_info['email'],
+          accounts: user_info['accounts'],
+          id: user_info['sub'],
+          inn: user_info['inn'],
+          bank: user_info['terBank'],
+          org_id: user_info['orgId'],
+          org_id_hash: user_info['HashOrgId'],
           provider: options.name
         }
       end
 
       extra do
         {
-          'raw_info' => raw_info,
           'credentials' => credentials,
-          'client_info' => client_info
+          'user_info' => user_info,
+          'client_info' => client_info,
+          'sbbol_headers' => sbbol_headers,
+          'sbbol_signature' => sbbol_signature
         }
       end
 
@@ -84,8 +86,34 @@ module OmniAuth
         access_token.options[:mode] = :header
         @raw_info ||= begin
           result = access_token.get(options.client_options['user_info_path'], headers: info_headers).body
-          decoded_data = result.split('.').map { |code| decrypt(code) }
-          decoded_data.reduce(:merge)
+          data = result.split('.')
+          raise 'Raw data size error' if data.length != 3
+
+          data
+        end
+      end
+
+      def sbbol_headers
+        @sbbol_headers ||= begin
+          return if raw_info[0].blank?
+
+          decrypt(raw_info[0])
+        end
+      end
+
+      def user_info
+        @user_info ||= begin
+          return if raw_info[1].blank?
+
+          decrypt(raw_info[1])
+        end
+      end
+
+      def sbbol_signature
+        @sbbol_signature ||= begin
+          return if raw_info[2].blank?
+
+          raw_info[2]
         end
       end
 
@@ -147,12 +175,6 @@ module OmniAuth
 
       def https_option
         options[:https] || 0
-      end
-
-      def location
-        country = raw_info.fetch('country', {})['title']
-        city = raw_info.fetch('city', {})['title']
-        @location ||= [country, city].compact.join(', ')
       end
 
       def callback_phase
