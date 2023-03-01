@@ -156,6 +156,12 @@ module OmniAuth
                                                     '/fintech/api/v1/client-info'
       end
 
+      def callback_url
+        return options.redirect_url + query_string if options.redirect_url.present?
+
+        full_host + script_name + callback_path + query_string
+      end
+
       def query_string
         params = request.params.except('state', 'nonce', 'code')
         request.query_string.empty? ? '' : "?#{params.to_query}"
