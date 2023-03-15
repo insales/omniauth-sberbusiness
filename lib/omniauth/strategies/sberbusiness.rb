@@ -164,7 +164,7 @@ module OmniAuth
 
       def query_string
         params = request.params.except('state', 'nonce', 'code')
-        request.query_string.empty? ? '' : "?#{params.to_query}"
+        params.empty? ? '' : "?#{params.to_query}"
       end
 
       def info_options
