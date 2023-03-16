@@ -163,8 +163,12 @@ module OmniAuth
       end
 
       def query_string
-        params = request.params.except('state', 'nonce', 'code')
-        params.empty? ? '' : "?#{params.to_query}"
+        redirect_uri = URI(options.redirect_url)
+        redirect_params = Rack::Utils.parse_nested_query(redirect_uri.query)
+        params = request.params.except('state', 'nonce', 'code', *redirect_params.keys)
+        return '' if params.empty?
+
+        (redirect_params.empty? ? '?' : '&') + params.to_query
       end
 
       def info_options
