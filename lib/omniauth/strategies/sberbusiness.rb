@@ -15,6 +15,8 @@ module OmniAuth
 
       DEFAULT_SCOPE = 'openid inn email'
 
+      DEFAULT_TOKEN_PORT = 28016
+
       option :name, 'sberbusiness'
 
       option :test, false
@@ -205,7 +207,11 @@ module OmniAuth
       end
 
       def change_auth_link_when_token
-        options.client_options[:authorize_url] = "http://localhost:#{request.params['callbackPort']}/ic/sso/api/v2/oauth/authorize"
+        options.client_options[:authorize_url] = "http://localhost:#{token_port}/ic/sso/api/v2/oauth/authorize"
+      end
+
+      def token_port
+        request.params['callbackPort'] || DEFAULT_TOKEN_PORT
       end
     end
   end
